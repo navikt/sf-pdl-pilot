@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package no.nav.pdlsf.proto;
+
+
+option java_package = "no.nav.pdlsf.proto";
+option java_outer_classname = "PersonProto";
+
+// this message will be the key part of kafka payload
+message PersonKey {
+  string aktoer_id = 1;
+}
+
+// this message will be the value part of kafka payload
+message PersonValue {
+  string identifikasjonsnummer = 1;
+  string fornavn = 2;
+  string mellomnavn = 3;
+  string etternavn = 4;
+
+  // default value will be the one with 0
+  enum Gradering {
+    UGRADERT = 0;
+    FORTROLIG = 1;
+    STRENGT_FORTROLIG = 2;
+    STRENGT_FORTROLIG_UTLAND = 3;
+  }
+
+  Gradering adressebeskyttelse = 5;
+  repeated string sikkerhetstiltak = 6;
+  string kommunenummer = 7;
+  string region = 8;
+  bool doed = 9;
+}

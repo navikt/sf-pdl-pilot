@@ -1,0 +1,20 @@
+# Intellij
+.idea/
+build/
+*.iml
+*.iws
+
+# Mac
+.DS_Store
+
+# Maven
+log/
+target/
+
+# Gradle
+.gradle/
+out/
+
+
+#Scratch
+Scratch*.kt
