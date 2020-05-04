@@ -53,39 +53,35 @@ private fun executeGraphQlQuery(
 }
 
 @ImplicitReflectionSerializer
-fun getPersonFromGraphQL(ident: String): Pair<Boolean, PersonBase> {
+internal fun getPersonFromGraphQL(ident: String): Pair<ConsumerStates, PersonBase> {
     val query = getStringFromResource(GRAPHQL_QUERY).trim()
-    var isOk: Boolean = false
 
     return when (val response = executeGraphQlQuery(query, mapOf("ident" to ident))) {
         is QueryErrorResponse -> {
             if (response.errors.first().mapToHttpCode().code == 404) {
                 log.warn { "GraphQL aktørId $ident ikke funnet." }
                 Metrics.parsedGrapQLPersons.labels(PersonUnknown.toMetricsLable()).inc()
-                isOk = false
-                Pair(isOk, PersonUnknown)
+                Pair(ConsumerStates.HasIssues, PersonUnknown)
             } else {
                 log.error { "GraphQL aktørId $ident  feilet - ${response.errors.first().message}" }
                 Metrics.parsedGrapQLPersons.labels(PersonError.toMetricsLable()).inc()
-                isOk = false
-                Pair(isOk, PersonError)
+                Pair(ConsumerStates.HasIssues, PersonError)
             }
         }
         is InvalidQueryResponse -> {
             log.error { "Unable to parse graphql query response on aktørId - $ident " }
             Metrics.parsedGrapQLPersons.labels(PersonInvalid.toMetricsLable()).inc()
-            isOk = false
-            Pair(isOk, PersonInvalid)
+            Pair(ConsumerStates.HasIssues, PersonInvalid)
         }
         is QueryResponse -> {
             val person = response.toPerson()
             if (person is PersonInvalid) {
                 log.error { "Unable to parse person from qraphql response on aktørId - $ident " }
                 Metrics.parsedGrapQLPersons.labels(person.toMetricsLable()).inc()
-                Pair(isOk, person)
+                Pair(ConsumerStates.IsOk, person)
             } else {
                 Metrics.parsedGrapQLPersons.labels(person.toMetricsLable()).inc()
-                Pair(isOk, person)
+                Pair(ConsumerStates.IsOk, person)
             }
         }
     }

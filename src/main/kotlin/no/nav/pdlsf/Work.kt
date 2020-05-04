@@ -48,7 +48,7 @@ internal fun work(params: Params) {
         val results = params.vault.pilotList.reader().readLines().map { fnr ->
             getPersonFromGraphQL(fnr)
         }
-        val areOk = results.fold(true) { acc, resp -> acc && resp.first }
+        val areOk = results.fold(true) { acc, resp -> acc && (resp.first == ConsumerStates.IsOk) }
 
         val finalRes = if (areOk) {
             log.info { "${results.size} consumer records resulted in number of Person ${results.filter { it.second is Person }.count()}, Tombestone ${results.filter { it.second is PersonTombestone }.count()}, Dead  ${results.filter { it.second is PersonDead }.count()}, Unknown ${results.filter { it.second is PersonUnknown }.count()}" }
