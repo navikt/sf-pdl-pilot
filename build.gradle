@@ -97,9 +97,6 @@ dependencies {
     implementation "io.prometheus:simpleclient_common:$prometheus_version"
     implementation "io.prometheus:simpleclient_hotspot:$prometheus_version"
 
-    testImplementation "io.kotest:kotest-runner-junit5-jvm:$kotest_version"
-    testImplementation "io.kotest:kotest-assertions-core-jvm:$kotest_version"
-    testImplementation "org.http4k:http4k-server-ktorcio:$http4k_version"
     testImplementation "no.nav:kafka-embedded-env:$embedded_kafka"
 }
 
