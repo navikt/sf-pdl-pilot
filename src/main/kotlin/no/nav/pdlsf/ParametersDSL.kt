@@ -164,13 +164,13 @@ data class Vault(
     val kafkaPassword: String = getServiceUserOrDefault("password"),
 
         // keystore details
-    val keystoreB64: String = getSecretOrDefault("keystoreJKSB64"),
-    val ksPassword: String = getSecretOrDefault("KeystorePassword"),
-    val pkAlias: String = getSecretOrDefault("PrivateKeyAlias"),
-    val pkPwd: String = getSecretOrDefault("PrivateKeyPassword"),
+    val keystoreB64: String = getSecretOrDefault("keystoreJKSB64", "keystoreJKSB64"),
+    val ksPassword: String = getSecretOrDefault("KeystorePassword", "password"),
+    val pkAlias: String = getSecretOrDefault("PrivateKeyAlias","alias"),
+    val pkPwd: String = getSecretOrDefault("PrivateKeyPassword","password"),
 
         // List of fnr pilot persons
-    val pilotList: String = getSecretOrDefault("pilotlist")
+    val pilotList: String = getSecretOrDefault("pilotlist", getStringFromResource("/pilotlist"))
 ) {
     companion object {
         private fun getOrDefault(file: File, d: String): String = runCatching { file.readText(Charsets.UTF_8) }

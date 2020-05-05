@@ -13,6 +13,7 @@ buildscript {
     ext.junit5_version = '3.4.2'
     ext.kotlin_serialization = '0.20.0'
     ext.grpc_version = '1.26.0'
+    ext.kotest_version = '4.0.2'
 
 }
 
@@ -51,9 +52,9 @@ tasks.withType(JavaExec) {
 
 run {
     environment "KAFKA_BROKERS", "localhost:9092"
-    environment "KAFKA_CLIENTID", "pdl-sf"
+    environment "KAFKA_CLIENTID", "sf-pdl-pilot"
     environment "KAFKA_SECURITY", "FALSE"
-    environment "KAFKA_TOPIC", "public-ereg-cache-org-json"
+    environment "KAFKA_TOPIC", "private-sf-person-pilot-local"
     environment "SF_OAUTHURL", "tbd"
     environment "SF_TOKEN", "tbd"
     environment "SF_RESTENDPOINT", "tbd"
@@ -96,7 +97,9 @@ dependencies {
     implementation "io.prometheus:simpleclient_common:$prometheus_version"
     implementation "io.prometheus:simpleclient_hotspot:$prometheus_version"
 
-    testImplementation "io.kotlintest:kotlintest-runner-junit5:$junit5_version"
+    testImplementation "io.kotest:kotest-runner-junit5-jvm:$kotest_version"
+    testImplementation "io.kotest:kotest-assertions-core-jvm:$kotest_version"
+    testImplementation "org.http4k:http4k-server-ktorcio:$http4k_version"
     testImplementation "no.nav:kafka-embedded-env:$embedded_kafka"
 }
 
