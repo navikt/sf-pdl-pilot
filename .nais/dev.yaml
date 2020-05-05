@@ -62,3 +62,7 @@ spec:
       value: 'https://api-gw-q1.oera.no/security-token-service/rest/v1/sts/token'
     - name: MS_BETWEEN_WORK
       value: '600000'
+    - name: SF_INSTTYPE
+      value: 'PREPROD'
+    - name: SF_VERSION
+      value: 'v48.0'
