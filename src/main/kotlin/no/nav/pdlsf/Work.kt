@@ -46,8 +46,8 @@ internal fun work(params: Params) {
         log.info { "Start building up map of person from PDL compaction log" }
         val km: MutableMap<ByteArray, ByteArray?> = mutableMapOf()
         val results = params.vault.pilotList.reader().readLines().map { fnr ->
-            // getPersonFromGraphQL(fnr)
-            Pair<ConsumerStates, PersonBase>(ConsumerStates.IsOk, PersonUnknown)
+            getPersonFromGraphQL(fnr)
+            //Pair<ConsumerStates, PersonBase>(ConsumerStates.IsOk, PersonUnknown)
         }
         val areOk = results.fold(true) { acc, resp -> acc && (resp.first == ConsumerStates.IsOk) }
 
