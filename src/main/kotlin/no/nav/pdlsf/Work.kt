@@ -104,13 +104,16 @@ internal fun work(params: Params) {
 
             if (!cRecords.isEmpty) {
                 // TODO :: SF postering
-                when (sfPost(cRecords
-                        .map { PersonProtoObject(it.key().protobufSafeParseKey(), it.value().protobufSafeParseValue()) }
-                        )) {
-                    true -> ConsumerStates.IsOk
-                    false -> ConsumerStates.HasIssues
-                }
+                val list = cRecords.map { PersonProtoObject(it.key().protobufSafeParseKey(), it.value().protobufSafeParseValue()) }
+                log.info { "${list.toJsonPayload(Params().envVar)}" }
                 ConsumerStates.IsOkNoCommit
+
+//                when (sfPost(cRecords
+//                        .map { PersonProtoObject(it.key().protobufSafeParseKey(), it.value().protobufSafeParseValue()) }
+//                        )) {
+//                    true -> ConsumerStates.IsOk
+//                    false -> ConsumerStates.HasIssues
+//                }
             } else {
                 log.info { "Kafka events completed for now - leaving kafka consumer loop" }
                 ConsumerStates.IsFinished

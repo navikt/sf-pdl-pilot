@@ -238,8 +238,8 @@ internal fun getSalesforceSObjectPostFun(
         }
     }
 }
-
-private fun List<PersonProtoObject>.toJsonPayload(ev: EnvVar): String = Jackson.let { json ->
+// TODO :: private
+internal fun List<PersonProtoObject>.toJsonPayload(ev: EnvVar): String = Jackson.let { json ->
 
     json.obj(
             "allOrNone" to json.boolean(true),
