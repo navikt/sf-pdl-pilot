@@ -18,8 +18,8 @@ fun createCache(params: Params): Map<String, Int?> {
                     ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG to params.envVar.kBrokers,
                     ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG to ByteArrayDeserializer::class.java,
                     ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG to ByteArrayDeserializer::class.java,
-                    ConsumerConfig.GROUP_ID_CONFIG to params.envVar.kClientID,
-                    ConsumerConfig.CLIENT_ID_CONFIG to params.envVar.kClientID,
+                    ConsumerConfig.GROUP_ID_CONFIG to params.envVar.kClientID + "-cache",
+                    ConsumerConfig.CLIENT_ID_CONFIG to params.envVar.kClientID + "-cache",
                     ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG to "false"
             ).let { cMap ->
                 if (params.envVar.kSecurityEnabled)

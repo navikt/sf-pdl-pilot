@@ -166,8 +166,8 @@ data class Vault(
         // keystore details
     val keystoreB64: String = getSecretOrDefault("keystoreJKSB64", "keystoreJKSB64"),
     val ksPassword: String = getSecretOrDefault("KeystorePassword", "password"),
-    val pkAlias: String = getSecretOrDefault("PrivateKeyAlias","alias"),
-    val pkPwd: String = getSecretOrDefault("PrivateKeyPassword","password"),
+    val pkAlias: String = getSecretOrDefault("PrivateKeyAlias", "alias"),
+    val pkPwd: String = getSecretOrDefault("PrivateKeyPassword", "password"),
 
         // List of fnr pilot persons
     val pilotList: String = getSecretOrDefault("pilotlist", getStringFromResource("/pilotlist"))
