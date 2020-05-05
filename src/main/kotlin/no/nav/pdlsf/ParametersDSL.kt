@@ -36,11 +36,11 @@ const val SF_TEST_URL = "https://test.salesforce.com"
 // const val SF_SCRATCH_UN = "permiteringsvarsel.integrasjon@scratch.org"
 
 // magnus scratch
-const val SF_SCRATCH_CID = "3MVG9Lu3LaaTCEgLKbAeBvSXPq9Nfpz.9KHxJzYd4kCMP4BEPgxL93cBL_z427vGecqN4iX0mcm0onlNkCirN"
-const val SF_SCRATCH_UN = "permitteringsvarsler.integrasjon@nav.no.debug"
+const val SF_SCRATCH_CID = "3MVG9Lu3LaaTCEgLaFUt66fWsaBLcqUcHxSSQ9bqAQlMOAy.nHLTcoHlyfd8aOy06cdaZ5.zrv2KxkqrqHzmM"
+const val SF_SCRATCH_UN = "pdl-integration@nav.no.pdlpilot"
 
-const val SF_PREPROD_CID = "3MVG9Ve.2wqUVx_Z3N2_xrMOSIUIieypuK3sIpU_eUu0yFP6gAG.sKxs.wiVC57zbg5067zsRReuFCPyHdKfAx"
-const val SF_PREPROD_UN = "permitteringsvarsler.integrasjon@nav.no.preprod"
+const val SF_PREPROD_CID = ""
+const val SF_PREPROD_UN = ""
 
 const val SF_PROD_URL = "https://login.salesforce.com"
 
