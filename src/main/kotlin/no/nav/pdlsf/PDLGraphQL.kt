@@ -25,14 +25,15 @@ private const val GRAPHQL_QUERY = "/graphql/query.graphql"
 @ImplicitReflectionSerializer
 private fun executeGraphQlQuery(
     query: String,
-    variables: Map<String, String>
+    variables: Map<String, String>,
+    stsToken: StsAccessToken
 ): QueryResponseBase = runCatching {
     Http.client.invokeWM(
             org.http4k.core.Request(Method.POST, Params().envVar.pdlGraphQlUrl)
                     .header("x-nav-apiKey", Params().envVar.pdlGraphQlApiKey)
                     .header("Tema", "GEN")
-                    .header("Authorization", "Bearer ${(getStsToken() as StsAccessToken).accessToken}")
-                    .header("Nav-Consumer-Token", "Bearer ${(getStsToken() as StsAccessToken).accessToken}")
+                    .header("Authorization", "Bearer $stsToken")
+                    .header("Nav-Consumer-Token", "Bearer $stsToken")
                     .header("Cache-Control", "no-cache")
                     .header("Content-Type", "application/json")
                     .body(json.stringify(QueryRequest(
@@ -52,42 +53,47 @@ private fun executeGraphQlQuery(
             }
         }
     }
-}.onFailure { log.error { "GraphQl query faild ${Params().envVar.pdlGraphQlUrl} - apiKey length ${Params().envVar.pdlGraphQlApiKey.length} - ${it.localizedMessage}" } }
+}.onFailure { log.error { "GraphQl query faild ${Params().envVar.pdlGraphQlUrl} - apiKey length ${Params().envVar.pdlGraphQlApiKey.length} token ${(getStsToken() as StsAccessToken).accessToken} - ${it.localizedMessage}" } }
         .getOrThrow()
 
 @ImplicitReflectionSerializer
 internal fun getPersonFromGraphQL(ident: String): Pair<ConsumerStates, PersonBase> {
     val query = getStringFromResource(GRAPHQL_QUERY).trim()
     log.info { "grapghql url -${Params().envVar.pdlGraphQlUrl}" }
-
-    return when (val response = executeGraphQlQuery(query, mapOf("ident" to ident))) {
-        is QueryErrorResponse -> {
-            if (response.errors.first().mapToHttpCode().code == 404) {
-                log.warn { "GraphQL aktørId $ident ikke funnet." }
-                Metrics.parsedGrapQLPersons.labels(PersonUnknown.toMetricsLable()).inc()
-                Pair(ConsumerStates.HasIssues, PersonUnknown)
-            } else {
-                log.error { "GraphQL aktørId $ident  feilet - ${response.errors.first().message}" }
-                Metrics.parsedGrapQLPersons.labels(PersonError.toMetricsLable()).inc()
-                Pair(ConsumerStates.HasIssues, PersonError)
+    val stsToken = getStsToken()
+    return if (stsToken is StsAccessToken) {
+        when (val response = executeGraphQlQuery(query, mapOf("ident" to ident), stsToken)) {
+            is QueryErrorResponse -> {
+                if (response.errors.first().mapToHttpCode().code == 404) {
+                    log.warn { "GraphQL aktørId $ident ikke funnet." }
+                    Metrics.parsedGrapQLPersons.labels(PersonUnknown.toMetricsLable()).inc()
+                    Pair(ConsumerStates.HasIssues, PersonUnknown)
+                } else {
+                    log.error { "GraphQL aktørId $ident  feilet - ${response.errors.first().message}" }
+                    Metrics.parsedGrapQLPersons.labels(PersonError.toMetricsLable()).inc()
+                    Pair(ConsumerStates.HasIssues, PersonError)
+                }
+            }
+            is InvalidQueryResponse -> {
+                log.error { "Unable to parse graphql query response on aktørId - $ident " }
+                Metrics.parsedGrapQLPersons.labels(PersonInvalid.toMetricsLable()).inc()
+                Pair(ConsumerStates.HasIssues, PersonInvalid)
+            }
+            is QueryResponse -> {
+                val person = response.toPerson()
+                if (person is PersonInvalid) {
+                    log.error { "Unable to parse person from qraphql response on aktørId - $ident " }
+                    Metrics.parsedGrapQLPersons.labels(person.toMetricsLable()).inc()
+                    Pair(ConsumerStates.IsOk, person)
+                } else {
+                    Metrics.parsedGrapQLPersons.labels(person.toMetricsLable()).inc()
+                    Pair(ConsumerStates.IsOk, person)
+                }
             }
         }
-        is InvalidQueryResponse -> {
-            log.error { "Unable to parse graphql query response on aktørId - $ident " }
-            Metrics.parsedGrapQLPersons.labels(PersonInvalid.toMetricsLable()).inc()
-            Pair(ConsumerStates.HasIssues, PersonInvalid)
-        }
-        is QueryResponse -> {
-            val person = response.toPerson()
-            if (person is PersonInvalid) {
-                log.error { "Unable to parse person from qraphql response on aktørId - $ident " }
-                Metrics.parsedGrapQLPersons.labels(person.toMetricsLable()).inc()
-                Pair(ConsumerStates.IsOk, person)
-            } else {
-                Metrics.parsedGrapQLPersons.labels(person.toMetricsLable()).inc()
-                Pair(ConsumerStates.IsOk, person)
-            }
-        }
+    } else {
+        log.error { "Invalid StsToken, when querying graphQL" }
+        Pair(ConsumerStates.HasIssues, PersonError)
     }
 }
 

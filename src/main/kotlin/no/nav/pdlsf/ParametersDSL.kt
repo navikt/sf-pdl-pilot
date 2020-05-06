@@ -160,8 +160,8 @@ data class Vault(
     val sfUsername: String = getSecretOrDefault("SFUsername"),
 
         // kafka details
-    val kafkaUser: String = getServiceUserOrDefault("username"),
-    val kafkaPassword: String = getServiceUserOrDefault("password"),
+    val kafkaUser: String = getServiceUserOrDefault("username", "kafkauser"),
+    val kafkaPassword: String = getServiceUserOrDefault("password", "kafkapassword"),
 
         // keystore details
     val keystoreB64: String = getSecretOrDefault("keystoreJKSB64", "keystoreJKSB64"),
