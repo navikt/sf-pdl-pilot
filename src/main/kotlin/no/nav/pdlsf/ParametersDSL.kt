@@ -187,7 +187,7 @@ data class Vault(
 
 data class EnvVar(
         // salesforce details
-    val sfInstanceType: String = getEnvOrDefault("SF_INSTTYPE", "MOCK").toUpperCase(), // TODO:: Default to MOCK instead of SCRATCH
+    val sfInstanceType: String = getEnvOrDefault("SF_INSTTYPE", "SCRATCH").toUpperCase(), // TODO:: Default to MOCK instead of SCRATCH
     val sfVersion: String = getEnvOrDefault("SF_VERSION", "v48.0"),
 
         // kafka details

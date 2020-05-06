@@ -2,6 +2,7 @@ package no.nav.pdlsf
 
 import com.google.protobuf.InvalidProtocolBufferException
 import kotlinx.serialization.ImplicitReflectionSerializer
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.serializer
 import mu.KotlinLogging
@@ -76,7 +77,7 @@ data class PersonTombestone(
                 aktoerId = this@PersonTombestone.aktoerId
             }.build()
 }
-
+@Serializable
 data class Person(
     val aktoerId: String = "",
     val identifikasjonsnummer: String = "",
