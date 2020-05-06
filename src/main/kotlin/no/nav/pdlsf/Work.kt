@@ -129,22 +129,23 @@ internal fun work(params: Params) {
                         records = cRecords.map {
                             val key = it.key().protobufSafeParseKey()
                             val value = it.value().protobufSafeParseValue()
-
+                            val person = Person(
+                                    aktoerId = key.aktoerId,
+                                    identifikasjonsnummer = value.identifikasjonsnummer,
+                                    fornavn = value.fornavn,
+                                    mellomnavn = value.mellomnavn,
+                                    etternavn = value.etternavn,
+                                    adressebeskyttelse = Gradering.valueOf(value.adressebeskyttelse.name),
+                                    sikkerhetstiltak = value.sikkerhetstiltakList,
+                                    kommunenummer = value.kommunenummer,
+                                    region = value.region,
+                                    doed = value.doed
+                            ).toJson()
+                            log.info { "Person to Salesforce - $person" }
                             KafkaMessage(
                                     topic = it.topic(),
                                     key = (key.aktoerId),
-                                    value = Person(
-                                            aktoerId = key.aktoerId,
-                                            identifikasjonsnummer = value.identifikasjonsnummer,
-                                            fornavn = value.fornavn,
-                                            mellomnavn = value.mellomnavn,
-                                            etternavn = value.etternavn,
-                                            adressebeskyttelse = Gradering.valueOf(value.adressebeskyttelse.name),
-                                            sikkerhetstiltak = value.sikkerhetstiltakList,
-                                            kommunenummer = value.kommunenummer,
-                                            region = value.region,
-                                            doed = value.doed
-                                    ).toJson().encodeB64()
+                                    value = person.encodeB64()
                             )
                         }
                 ).toJson()

@@ -39,7 +39,7 @@ private fun executeGraphQlQuery(
                     .body(json.stringify(QueryRequest(
                             query = query,
                             variables = variables
-                    ))).also { log.info { it.toMessage() } }
+                    )))
     ).let { response ->
         when (response.status) {
             Status.OK -> {
@@ -59,7 +59,6 @@ private fun executeGraphQlQuery(
 @ImplicitReflectionSerializer
 internal fun getPersonFromGraphQL(ident: String): Pair<ConsumerStates, PersonBase> {
     val query = getStringFromResource(GRAPHQL_QUERY).trim()
-    log.info { "grapghql url -${EnvVar().pdlGraphQlUrl}" }
     val stsToken = getStsToken()
     return if (stsToken is StsAccessToken) {
         when (val response = executeGraphQlQuery(query, mapOf("ident" to ident), stsToken)) {
