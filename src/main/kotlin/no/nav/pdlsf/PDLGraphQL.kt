@@ -38,7 +38,7 @@ private fun executeGraphQlQuery(
                     .body(json.stringify(QueryRequest(
                             query = query,
                             variables = variables
-                    )))
+                    ))).also { log.info { it.toMessage() } }
     ).let { response ->
         when (response.status) {
             Status.OK -> {
