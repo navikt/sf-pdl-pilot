@@ -26,35 +26,39 @@ private const val GRAPHQL_QUERY = "/graphql/query.graphql"
 private fun executeGraphQlQuery(
     query: String,
     variables: Map<String, String>
-): QueryResponseBase = Http.client.invokeWM(
-        org.http4k.core.Request(Method.POST, Params().envVar.pdlGraphQlUrl)
-                .header("x-nav-apiKey", Params().envVar.pdlGraphQlApiKey)
-                .header("Tema", "GEN")
-                .header("Authorization", "Bearer ${(getStsToken() as StsAccessToken).accessToken}")
-                .header("Nav-Consumer-Token", "Bearer ${(getStsToken() as StsAccessToken).accessToken}")
-                .header("Cache-Control", "no-cache")
-                .header("Content-Type", "application/json")
-                .body(json.stringify(QueryRequest(
-                        query = query,
-                        variables = variables
-                )))
-).let { response ->
-    when (response.status) {
-        Status.OK -> {
-            val result = response.bodyString().getQueryResponseFromJsonString()
-            result
-        }
-        else -> {
-            log.error { "PDL GraphQl request failed - ${response.toMessage()}" }
-            Metrics.failedRequestGraphQl.inc()
-            InvalidQueryResponse
+): QueryResponseBase = runCatching {
+    Http.client.invokeWM(
+            org.http4k.core.Request(Method.POST, Params().envVar.pdlGraphQlUrl)
+                    .header("x-nav-apiKey", Params().envVar.pdlGraphQlApiKey)
+                    .header("Tema", "GEN")
+                    .header("Authorization", "Bearer ${(getStsToken() as StsAccessToken).accessToken}")
+                    .header("Nav-Consumer-Token", "Bearer ${(getStsToken() as StsAccessToken).accessToken}")
+                    .header("Cache-Control", "no-cache")
+                    .header("Content-Type", "application/json")
+                    .body(json.stringify(QueryRequest(
+                            query = query,
+                            variables = variables
+                    )))
+    ).let { response ->
+        when (response.status) {
+            Status.OK -> {
+                val result = response.bodyString().getQueryResponseFromJsonString()
+                result
+            }
+            else -> {
+                log.error { "PDL GraphQl request failed - ${response.toMessage()}" }
+                Metrics.failedRequestGraphQl.inc()
+                InvalidQueryResponse
+            }
         }
     }
-}
+}.onFailure { log.error { "GraphQl query faild ${Params().envVar.pdlGraphQlUrl} - apiKey length ${Params().envVar.pdlGraphQlApiKey.length} - ${it.localizedMessage}" } }
+        .getOrThrow()
 
 @ImplicitReflectionSerializer
 internal fun getPersonFromGraphQL(ident: String): Pair<ConsumerStates, PersonBase> {
     val query = getStringFromResource(GRAPHQL_QUERY).trim()
+    log.info { "grapghql url -${Params().envVar.pdlGraphQlUrl}" }
 
     return when (val response = executeGraphQlQuery(query, mapOf("ident" to ident))) {
         is QueryErrorResponse -> {

@@ -210,9 +210,9 @@ data class EnvVar(
 
         // Pilot related
     val stsApiKey: String = ("/var/run/secrets/nais.io/apigw/security-token-service-token/x-nav-apiKey".readFile() ?: ""), // TODO :: Litt malpalsert er jo ikke direkte en env
-    val stsUrl: String = System.getenv("STS_REST_URL") ?: "",
+    val stsUrl: String = System.getenv("STS_REST_URL") ?: "default url",
     val pdlGraphQlApiKey: String = ("/var/run/secrets/nais.io/apigw/pdl-api/x-nav-apiKey".readFile() ?: ""), // TODO :: Litt malpalsert er jo ikke direkte en env
-    val pdlGraphQlUrl: String = System.getenv("PDL_GRAPHQL_URL") ?: ""
+    val pdlGraphQlUrl: String = System.getenv("PDL_GRAPHQL_URL") ?: "default url"
 
 ) {
     companion object {

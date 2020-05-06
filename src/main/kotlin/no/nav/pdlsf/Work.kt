@@ -50,10 +50,7 @@ internal fun work(params: Params) {
         val results = pilotFnrList.reader().readLines().map { fnr ->
             if (params.envVar.sfInstanceType == SalesforceInstancetype.SCRATCH.name) {
                 log.info { "Is SCRATCH - getPersonFromGraphQL $fnr" }
-                kotlin.runCatching {
                     getPersonFromGraphQL(fnr)
-                }.onFailure { log.error { "Failed query graph ql ${it.localizedMessage}" } }
-                        .getOrThrow()
             } else {
             Pair<ConsumerStates, PersonBase>(ConsumerStates.IsOk, Person(
                     aktoerId = "aktørId2",
