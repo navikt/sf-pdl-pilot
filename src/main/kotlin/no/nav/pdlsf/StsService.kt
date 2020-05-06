@@ -14,17 +14,29 @@ import org.http4k.core.Status
 private val log = KotlinLogging.logger { }
 private var cachedToken: StsAccessToken? = null // TODO :: Sealed class StsTokenEmpty
 
+// @ImplicitReflectionSerializer
+// object StsToken {
+//    val token: StsAccessTokenBase //= EmptyStsAccessToken
+//
+//    fun getToken() =
+//            if(this.token is EmptyStsAccessToken) fetchNewToken()
+//            else if (this.token is StsAccessToken && this.token.shouldRenew()) fetchNewToken()
+//            else this.token
+// }
+
 @ImplicitReflectionSerializer
 private fun fetchNewToken(): StsAccessTokenBase = Http.client.invokeWM(
-        (Request(Method.GET, Params().envVar.stsUrl)
-                .header("x-nav-apiKey", Params().envVar.stsApiKey)
+        (Request(Method.GET, EnvVar().stsUrl)
+                .header("x-nav-apiKey", EnvVar().stsApiKey)
                 .header("Authorization", "Basic ${Params().credentials()}")
                 .header("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.toHeaderValue())
                 .query("grant_type", "client_credentials"))
                 .query("scope", "openid")
 ).let { response ->
     when (response.status) {
-        Status.OK -> json.parse<StsAccessToken>(response.bodyString())
+        Status.OK -> runCatching { json.parse<StsAccessToken>(response.bodyString()) }
+                .onFailure { log.error { "Error parsing access token from STS - ${it.localizedMessage}" } }
+                .getOrDefault(InvalidStsAccessToken)
         else -> {
             log.error { "Authorization request failed - ${response.toMessage()}" }
             Metrics.failedRequestSts.inc()

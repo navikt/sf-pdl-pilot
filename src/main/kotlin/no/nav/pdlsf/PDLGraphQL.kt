@@ -29,8 +29,8 @@ private fun executeGraphQlQuery(
     stsToken: StsAccessToken
 ): QueryResponseBase = runCatching {
     Http.client.invokeWM(
-            org.http4k.core.Request(Method.POST, Params().envVar.pdlGraphQlUrl)
-                    .header("x-nav-apiKey", Params().envVar.pdlGraphQlApiKey)
+            org.http4k.core.Request(Method.POST, EnvVar().pdlGraphQlUrl)
+                    .header("x-nav-apiKey", EnvVar().pdlGraphQlApiKey)
                     .header("Tema", "GEN")
                     .header("Authorization", "Bearer $stsToken")
                     .header("Nav-Consumer-Token", "Bearer $stsToken")
@@ -53,13 +53,13 @@ private fun executeGraphQlQuery(
             }
         }
     }
-}.onFailure { log.error { "GraphQl query faild ${Params().envVar.pdlGraphQlUrl} - apiKey length ${Params().envVar.pdlGraphQlApiKey.length} token ${(getStsToken() as StsAccessToken).accessToken} - ${it.localizedMessage}" } }
+}.onFailure { log.error { "GraphQl query faild ${EnvVar().pdlGraphQlUrl} - apiKey length ${EnvVar().pdlGraphQlApiKey.length} token ${(getStsToken() as StsAccessToken).accessToken} - ${it.localizedMessage}" } }
         .getOrThrow()
 
 @ImplicitReflectionSerializer
 internal fun getPersonFromGraphQL(ident: String): Pair<ConsumerStates, PersonBase> {
     val query = getStringFromResource(GRAPHQL_QUERY).trim()
-    log.info { "grapghql url -${Params().envVar.pdlGraphQlUrl}" }
+    log.info { "grapghql url -${EnvVar().pdlGraphQlUrl}" }
     val stsToken = getStsToken()
     return if (stsToken is StsAccessToken) {
         when (val response = executeGraphQlQuery(query, mapOf("ident" to ident), stsToken)) {

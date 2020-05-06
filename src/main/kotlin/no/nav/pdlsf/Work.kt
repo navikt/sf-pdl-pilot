@@ -16,6 +16,8 @@ internal fun work(params: Params) {
     log.info { "bootstrap work session starting" }
 
     val cache = createCache(params)
+    // val token = StsToken.token
+    // log.info { token }
     if (!ServerState.isOk() && cache.isEmpty()) {
         log.error { "Terminating work session since cache is empty due to kafka issues" }
         return
