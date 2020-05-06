@@ -6,6 +6,7 @@ import mu.KotlinLogging
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.clients.producer.ProducerRecord
+import org.apache.kafka.common.serialization.ByteArrayDeserializer
 import org.apache.kafka.common.serialization.ByteArraySerializer
 
 private val log = KotlinLogging.logger {}
@@ -16,8 +17,6 @@ internal fun work(params: Params) {
     log.info { "bootstrap work session starting" }
 
     val cache = createCache(params)
-    // val token = StsToken.token
-    // log.info { token }
     if (!ServerState.isOk() && cache.isEmpty()) {
         log.error { "Terminating work session since cache is empty due to kafka issues" }
         return
@@ -52,7 +51,19 @@ internal fun work(params: Params) {
         val results = pilotFnrList.reader().readLines().map { fnr ->
             if (params.envVar.sfInstanceType == SalesforceInstancetype.SCRATCH.name) {
                 log.info { "Is SCRATCH - getPersonFromGraphQL $fnr" }
-                    getPersonFromGraphQL(fnr)
+                    // getPersonFromGraphQL(fnr)
+                Pair<ConsumerStates, PersonBase>(ConsumerStates.IsOk, Person(
+                        aktoerId = "aktørId3",
+                        identifikasjonsnummer = "fnr",
+                        fornavn = "fornavn",
+                        mellomnavn = "",
+                        etternavn = "etternavn",
+                        adressebeskyttelse = Gradering.UGRADERT,
+                        sikkerhetstiltak = listOf("sikkerhet", "sikkerhet2"),
+                        kommunenummer = "3001",
+                        region = "01",
+                        doed = false
+                ))
             } else {
             Pair<ConsumerStates, PersonBase>(ConsumerStates.IsOk, Person(
                     aktoerId = "aktørId2",
@@ -108,11 +119,12 @@ internal fun work(params: Params) {
         getKafkaConsumerByConfig<ByteArray, ByteArray>(
                 mapOf(
                         ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG to params.envVar.kBrokers,
-                        ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG to ByteArraySerializer::class.java,
-                        ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG to ByteArraySerializer::class.java,
+                        ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG to ByteArrayDeserializer::class.java,
+                        ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG to ByteArrayDeserializer::class.java,
                         ConsumerConfig.GROUP_ID_CONFIG to params.envVar.kClientID + "-consumer",
                         ConsumerConfig.CLIENT_ID_CONFIG to params.envVar.kClientID + "-consumer",
                         ConsumerConfig.AUTO_OFFSET_RESET_CONFIG to "earliest",
+                        ConsumerConfig.MAX_POLL_RECORDS_CONFIG to 200, // Use of SF REST API
                         ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG to "false"
                 ).let { cMap ->
                     if (params.envVar.kSecurityEnabled)

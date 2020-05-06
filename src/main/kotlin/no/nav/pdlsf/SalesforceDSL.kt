@@ -146,7 +146,7 @@ data class Signature(val content: String, val oAuthEndpoint: String) : Signature
             else -> {
                 Metrics.failedRequest.inc()
                 ServerState.flag(ServerStates.SalesforceIssues)
-                log.error { "Authorization request failed - ${response.status.description}(${response.status.code})" }
+                log.error { "Authorization request failed - ${response.toMessage()}" }
                 AuthorizationMissing
             }
         }

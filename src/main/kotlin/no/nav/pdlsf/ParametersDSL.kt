@@ -86,10 +86,10 @@ data class Params(
             .getOrDefault(SalesforceInstancetype.MOCK)
 
     private fun getKSB64(sfit: SalesforceInstancetype) = when (sfit) {
-        SalesforceInstancetype.MOCK -> "testkeystorejksB64".getResourceOrDefault()
-        SalesforceInstancetype.SCRATCH -> "testkeystorejksB64".getResourceOrDefault()
+        SalesforceInstancetype.MOCK -> "keystorejksB64".getResourceOrDefault()
+        SalesforceInstancetype.SCRATCH -> "keystorejksB64".getResourceOrDefault()
         SalesforceInstancetype.PREPROD ->
-            if (vault.keystoreB64.isEmpty()) "testkeystorejksB64".getResourceOrDefault() else vault.keystoreB64
+            if (vault.keystoreB64.isEmpty()) "keystorejksB64".getResourceOrDefault() else vault.keystoreB64
         SalesforceInstancetype.PRODUCTION -> vault.keystoreB64
     }
 
@@ -187,7 +187,7 @@ data class Vault(
 
 data class EnvVar(
         // salesforce details
-    val sfInstanceType: String = getEnvOrDefault("SF_INSTTYPE", "MOCK").toUpperCase(),
+    val sfInstanceType: String = getEnvOrDefault("SF_INSTTYPE", "MOCK").toUpperCase(), // TODO:: Default to MOCK instead of SCRATCH
     val sfVersion: String = getEnvOrDefault("SF_VERSION", "v48.0"),
 
         // kafka details
