@@ -45,7 +45,9 @@ private fun fetchNewToken(): StsAccessTokenBase = runCatching {
             }
         }
     }.also { token -> if (token is StsAccessToken) cachedToken = token }
-}.onFailure { log.error { "Error fetchNewToken - ${it.localizedMessage} " } }
+}.onFailure {
+    log.info { "URL - ${EnvVar().stsUrl} - apiKey ${EnvVar().stsApiKey.length} - auth ${Vault().credentials().length} " }
+    log.error { "Error fetchNewToken - ${it.localizedMessage} " } }
         .getOrDefault(InvalidStsAccessToken)
 @ImplicitReflectionSerializer
 fun getStsToken(): StsAccessTokenBase =
