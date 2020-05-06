@@ -1,6 +1,5 @@
 package no.nav.pdlsf
 
-import com.fasterxml.jackson.databind.JsonNode
 import java.security.KeyStore
 import java.security.PrivateKey
 import java.util.Base64
@@ -11,7 +10,6 @@ import mu.KotlinLogging
 import org.http4k.core.Method
 import org.http4k.core.Request
 import org.http4k.core.Status
-import org.http4k.format.Jackson
 
 private val log = KotlinLogging.logger { }
 
@@ -185,7 +183,7 @@ data class Authorization(
 
 internal fun getSalesforceSObjectPostFun(
     sf: Salesforce,
-    doSomething: ((List<PersonProtoObject>) -> Boolean) -> Unit
+    doSomething: ((String) -> Boolean) -> Unit
 ): Boolean = sf.authorize().let { authorization ->
 
     fun failure(error: String): Boolean {
@@ -195,10 +193,10 @@ internal fun getSalesforceSObjectPostFun(
         return false
     }
 
-    tailrec fun doPost(list: List<PersonProtoObject>, a: AuthorizationBase, retries: Int = 1): Boolean = when (a) {
+    tailrec fun doPost(b: String, a: AuthorizationBase, retries: Int = 1): Boolean = when (a) {
         is AuthorizationMissing -> false
         is Authorization -> {
-            val r = Http.client.invokeWM(a.getPostRequest(sf.sObjectPath()).body(list.toJsonPayload(Params().envVar)))
+            val r = Http.client.invokeWM(a.getPostRequest(sf.sObjectPath()).body(b))
             when (r.status) {
                 Status.OK -> {
                     SFsObjectStatus.fromJson(r.bodyString()).let { status ->
@@ -218,7 +216,7 @@ internal fun getSalesforceSObjectPostFun(
                         log.info { "${r.status.description} - refresh of token, attempt no: $retries" }
                         Metrics.failedRequest.inc()
                         runCatching { runBlocking { delay((retries * 1_000).toLong()) } }
-                        doPost(list, sf.authorize(), retries + 1)
+                        doPost(b, sf.authorize(), retries + 1)
                     } else failure("Failed to reauthorize with Salesforce")
                 }
                 else -> {
@@ -228,7 +226,7 @@ internal fun getSalesforceSObjectPostFun(
         }
     }
 
-    fun doSomethingPost(b: List<PersonProtoObject>): Boolean = doPost(b, authorization)
+    fun doSomethingPost(b: String): Boolean = doPost(b, authorization)
 
     when (authorization) {
         is AuthorizationMissing -> false
@@ -237,22 +235,4 @@ internal fun getSalesforceSObjectPostFun(
             true
         }
     }
-}
-// TODO :: private
-internal fun List<PersonProtoObject>.toJsonPayload(ev: EnvVar): String = Jackson.let { json ->
-
-    json.obj(
-            "allOrNone" to json.boolean(true),
-            "records" to json.array(this.map { it.toJson(ev) })
-    ).toString()
-}
-
-private fun PersonProtoObject.toJson(ev: EnvVar): JsonNode = Jackson.let { json ->
-
-    json.obj(
-            "attributes" to json.obj("type" to json.string("KafkaMessage__c")),
-            "CRM_Topic__c" to json.string(ev.kTopicSf),
-            "CRM_Key__c" to json.string("${this.key.aktoerId }"),
-            "CRM_Value__c" to json.string(Base64.getEncoder().encodeToString(this.value.toByteArray())) // TODO:: Verify
-    )
 }

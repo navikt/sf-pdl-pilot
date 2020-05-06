@@ -1,7 +1,9 @@
 package no.nav.pdlsf
 
 import com.google.protobuf.InvalidProtocolBufferException
+import kotlinx.serialization.ImplicitReflectionSerializer
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.serializer
 import mu.KotlinLogging
 import no.nav.pdlsf.proto.PersonProto.PersonKey
 import no.nav.pdlsf.proto.PersonProto.PersonValue
@@ -105,6 +107,9 @@ data class Person(
                 doed = this@Person.doed
             }
                     .build()
+
+    @ImplicitReflectionSerializer
+    fun toJson() = json.stringify(serializer(), this)
 }
 
 fun PersonBase.toMetricsLable(): String {

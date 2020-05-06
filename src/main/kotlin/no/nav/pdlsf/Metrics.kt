@@ -25,6 +25,12 @@ object Metrics {
             .help("No. of preStopHook activation since ever")
             .register()
 
+    val sentLayOff: Gauge = Gauge
+            .build()
+            .name("sent_layoff_gauge")
+            .help("No. of layoffs sent to Salesforce in last work session")
+            .register()
+
     val successfulRequest: Gauge = Gauge
             .build()
             .name("successful_request_gauge")
@@ -107,6 +113,8 @@ object Metrics {
     }
 
     fun sessionReset() {
+        sentLayOff.clear()
+
         cachedPersons.clear()
         publishedPersons.clear()
         parsedGrapQLPersons.clear()

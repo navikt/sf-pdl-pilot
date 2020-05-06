@@ -46,14 +46,16 @@ internal fun work(params: Params) {
         log.info { "Start building up map of person from PDL compaction log" }
         val km: MutableMap<ByteArray, ByteArray?> = mutableMapOf()
         val pilotFnrList = params.vault.pilotList
-        log.info { "string - $pilotFnrList" }
-        log.info { "list - ${pilotFnrList.reader().readLines()}}" }
+        // log.info { "string - $pilotFnrList" }
+        // log.info { "list - ${pilotFnrList.reader().readLines()}}" }
+        if (pilotFnrList.isEmpty()) {
+            log.error { "Pilot fnr list is empty - terminate" }
+            return@getKafkaProducerByConfig
+        }
 
         val results = pilotFnrList.reader().readLines().map { fnr ->
-            //
-            //
-            // getPersonFromGraphQL(fnr)
-            Pair<ConsumerStates, PersonBase>(ConsumerStates.IsOk, PersonUnknown)
+            getPersonFromGraphQL(fnr)
+            // Pair<ConsumerStates, PersonBase>(ConsumerStates.IsOk, PersonUnknown)
         }
         val areOk = results.fold(true) { acc, resp -> acc && (resp.first == ConsumerStates.IsOk) }
 
@@ -111,17 +113,43 @@ internal fun work(params: Params) {
 
             if (!cRecords.isEmpty) {
                 // TODO :: SF postering
-                val list = cRecords.map { PersonProtoObject(it.key().protobufSafeParseKey(), it.value().protobufSafeParseValue()) }
-                log.info { "${list.toJsonPayload(Params().envVar)}" }
-//                ConsumerStates.IsOkNoCommit
+                val body = SFsObjectRest(
+                        records = cRecords.map {
+                            val key = it.key().protobufSafeParseKey()
+                            val value = it.value().protobufSafeParseValue()
 
-                when (sfPost(cRecords
-                        .map { PersonProtoObject(it.key().protobufSafeParseKey(), it.value().protobufSafeParseValue()) }
-                        )) {
-                    true -> ConsumerStates.IsOk
-                    false -> ConsumerStates.HasIssues
+                            KafkaMessage(
+                                    topic = it.topic(),
+                                    key = (key.aktoerId),
+                                    value = Person(
+                                            aktoerId = key.aktoerId,
+                                            identifikasjonsnummer = value.identifikasjonsnummer,
+                                            fornavn = value.fornavn,
+                                            mellomnavn = value.mellomnavn,
+                                            etternavn = value.etternavn,
+                                            adressebeskyttelse = Gradering.valueOf(value.adressebeskyttelse.name),
+                                            sikkerhetstiltak = value.sikkerhetstiltakList,
+                                            kommunenummer = value.kommunenummer,
+                                            region = value.region,
+                                            doed = value.doed
+                                    ).toJson().encodeB64()
+                            )
+                        }
+                ).toJson()
+                log.info { "body - $body" }
+                if (sfPost(body)) {
+                    Metrics.sentLayOff.inc(cRecords.count().toDouble())
+                    log.info { "Post of ${cRecords.count()} layoff(s) to Salesforce" }
+
+                    // reset alarm metric
+                    if (ServerState.isOk()) Metrics.failedRequest.clear()
+
+                    // ConsumerStates.IsOk
+                    ConsumerStates.IsOkNoCommit // TODO:: Change prod
+                } else {
+                    log.error { "Couldn't post ${cRecords.count()} layoff(s) to Salesforce - leaving kafka consumer loop" }
+                    ConsumerStates.HasIssues
                 }
-                ConsumerStates.IsOkNoCommit
             } else {
                 log.info { "Kafka events completed for now - leaving kafka consumer loop" }
                 ConsumerStates.IsFinished
