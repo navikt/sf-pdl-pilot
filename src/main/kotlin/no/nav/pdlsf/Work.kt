@@ -50,7 +50,7 @@ internal fun work(params: Params) {
         }
 
         val results = pilotFnrList.reader().readLines().map { fnr ->
-            if (params.envVar.sfInstanceType == SalesforceInstancetype.SCRATCH.name) {
+            if (params.envVar.sfInstanceType != SalesforceInstancetype.SCRATCH.name) {
                 log.info { "Is SCRATCH - getPersonFromGraphQL $fnr" }
                     getPersonFromGraphQL(fnr)
             } else {

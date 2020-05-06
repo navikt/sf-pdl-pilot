@@ -53,7 +53,7 @@ private fun executeGraphQlQuery(
             }
         }
     }
-}.onFailure { log.error { "GraphQl query faild ${EnvVar().pdlGraphQlUrl} - apiKey length ${EnvVar().pdlGraphQlApiKey.length} token ${(getStsToken() as StsAccessToken).accessToken} - ${it.localizedMessage}" } }
+}.onFailure { log.error { "GraphQl query faild ${EnvVar().pdlGraphQlUrl} - apiKey length ${EnvVar().pdlGraphQlApiKey.length} - ${it.localizedMessage}" } }
         .getOrThrow()
 
 @ImplicitReflectionSerializer

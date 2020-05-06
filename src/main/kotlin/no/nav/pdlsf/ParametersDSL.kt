@@ -231,7 +231,7 @@ internal fun String.readFile(): String? =
             null
         }
 
-fun Params.credentials(): String = Base64.getEncoder().encodeToString("${vault.kafkaUser}:${vault.kafkaPassword}".toByteArray(Charsets.UTF_8))
+fun Vault.credentials(): String = Base64.getEncoder().encodeToString("$kafkaUser:$kafkaPassword".toByteArray(Charsets.UTF_8))
 
 internal fun getStringFromResource(path: String) =
         Params::class.java.getResourceAsStream(path).bufferedReader().use { it.readText() }

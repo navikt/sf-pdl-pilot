@@ -25,26 +25,28 @@ private var cachedToken: StsAccessToken? = null // TODO :: Sealed class StsToken
 // }
 
 @ImplicitReflectionSerializer
-private fun fetchNewToken(): StsAccessTokenBase = Http.client.invokeWM(
-        (Request(Method.GET, EnvVar().stsUrl)
-                .header("x-nav-apiKey", EnvVar().stsApiKey)
-                .header("Authorization", "Basic ${Params().credentials()}")
-                .header("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.toHeaderValue())
-                .query("grant_type", "client_credentials"))
-                .query("scope", "openid")
-).let { response ->
-    when (response.status) {
-        Status.OK -> runCatching { json.parse<StsAccessToken>(response.bodyString()) }
-                .onFailure { log.error { "Error parsing access token from STS - ${it.localizedMessage}" } }
-                .getOrDefault(InvalidStsAccessToken)
-        else -> {
-            log.error { "Authorization request failed - ${response.toMessage()}" }
-            Metrics.failedRequestSts.inc()
-            InvalidStsAccessToken
+private fun fetchNewToken(): StsAccessTokenBase = runCatching {
+    Http.client.invokeWM(
+            (Request(Method.GET, EnvVar().stsUrl)
+                    .header("x-nav-apiKey", EnvVar().stsApiKey)
+                    .header("Authorization", "Basic ${Vault().credentials()}")
+                    .header("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.toHeaderValue())
+                    .query("grant_type", "client_credentials"))
+                    .query("scope", "openid")
+    ).let { response ->
+        when (response.status) {
+            Status.OK -> runCatching { json.parse<StsAccessToken>(response.bodyString()) }
+                    .onFailure { log.error { "Error parsing access token from STS - ${it.localizedMessage}" } }
+                    .getOrDefault(InvalidStsAccessToken)
+            else -> {
+                log.error { "Authorization request failed - ${response.toMessage()}" }
+                Metrics.failedRequestSts.inc()
+                InvalidStsAccessToken
+            }
         }
-    }
-}.also { token -> if (token is StsAccessToken) cachedToken = token }
-
+    }.also { token -> if (token is StsAccessToken) cachedToken = token }
+}.onFailure { log.error { "Error fetchNewToken - ${it.localizedMessage} " } }
+        .getOrDefault(InvalidStsAccessToken)
 @ImplicitReflectionSerializer
 fun getStsToken(): StsAccessTokenBase =
         if (cachedToken == null || cachedToken.shouldRenew()) fetchNewToken()
