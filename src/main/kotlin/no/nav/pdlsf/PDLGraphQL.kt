@@ -32,8 +32,8 @@ private fun executeGraphQlQuery(
             org.http4k.core.Request(Method.POST, EnvVar().pdlGraphQlUrl)
                     .header("x-nav-apiKey", EnvVar().pdlGraphQlApiKey)
                     .header("Tema", "GEN")
-                    .header("Authorization", "Bearer $stsToken")
-                    .header("Nav-Consumer-Token", "Bearer $stsToken")
+                    .header("Authorization", "Bearer ${stsToken.accessToken}")
+                    .header("Nav-Consumer-Token", "Bearer ${stsToken.accessToken}")
                     .header("Cache-Control", "no-cache")
                     .header("Content-Type", "application/json")
                     .body(json.stringify(QueryRequest(
