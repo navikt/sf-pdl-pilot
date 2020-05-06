@@ -43,6 +43,6 @@ fun ApacheClient.proxy(): HttpHandler = EnvVar().httpsProxy.let { p ->
     }
 }
 
-fun HttpHandler.invokeWM(r: Request): Response = Metrics.responseLatency.startTimer().let { rt ->
+fun HttpHandler.invokeWM(r: Request): Response = Metrics.responseLatency.labels(r.uri.toString()).startTimer().let { rt ->
     this.invoke(r).also { rt.observeDuration() }
 }
