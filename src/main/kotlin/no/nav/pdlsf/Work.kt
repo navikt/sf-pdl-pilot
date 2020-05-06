@@ -3,18 +3,12 @@ package no.nav.pdlsf
 import kotlinx.serialization.ImplicitReflectionSerializer
 import kotlinx.serialization.UnstableDefault
 import mu.KotlinLogging
-import no.nav.pdlsf.proto.PersonProto
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.ByteArraySerializer
 
 private val log = KotlinLogging.logger {}
-
-internal data class PersonProtoObject(
-    val key: PersonProto.PersonKey,
-    val value: PersonProto.PersonValue
-)
 
 @OptIn(UnstableDefault::class)
 @ImplicitReflectionSerializer
@@ -35,7 +29,7 @@ internal fun work(params: Params) {
                     ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG to ByteArraySerializer::class.java,
                     ProducerConfig.ACKS_CONFIG to "all",
                     ProducerConfig.DELIVERY_TIMEOUT_MS_CONFIG to params.envVar.kProducerTimeout,
-                    ProducerConfig.CLIENT_ID_CONFIG to params.envVar.kClientID
+                    ProducerConfig.CLIENT_ID_CONFIG to params.envVar.kClientID + "-producer"
             ).let { map ->
                 if (params.envVar.kSecurityEnabled)
                     map.addKafkaSecurity(params.vault.kafkaUser, params.vault.kafkaPassword, params.envVar.kSecProt, params.envVar.kSaslMec)
@@ -54,8 +48,26 @@ internal fun work(params: Params) {
         }
 
         val results = pilotFnrList.reader().readLines().map { fnr ->
-            getPersonFromGraphQL(fnr)
-            // Pair<ConsumerStates, PersonBase>(ConsumerStates.IsOk, PersonUnknown)
+            if (params.envVar.sfInstanceType == SalesforceInstancetype.SCRATCH.name) {
+                log.info { "Is SCRATCH - getPersonFromGraphQL $fnr" }
+                kotlin.runCatching {
+                    getPersonFromGraphQL(fnr)
+                }.onFailure { log.error { "Failed query graph ql ${it.localizedMessage}" } }
+                        .getOrThrow()
+            } else {
+            Pair<ConsumerStates, PersonBase>(ConsumerStates.IsOk, Person(
+                    aktoerId = "aktørId2",
+                    identifikasjonsnummer = "fnr",
+                    fornavn = "fornavn",
+                    mellomnavn = "",
+                    etternavn = "etternavn",
+                    adressebeskyttelse = Gradering.UGRADERT,
+                    sikkerhetstiltak = listOf("sikkerhet", "sikkerhet2"),
+                    kommunenummer = "3001",
+                    region = "01",
+                    doed = false
+            ))
+            }
         }
         val areOk = results.fold(true) { acc, resp -> acc && (resp.first == ConsumerStates.IsOk) }
 
@@ -83,7 +95,7 @@ internal fun work(params: Params) {
         if (finalRes.first == ConsumerStates.IsOk) {
                     log.info { "${finalRes.second.size} - protobuf Person objects sent to topic ${params.envVar.kTopicSf}" }
             finalRes.second.forEach { m ->
-                        this.send(ProducerRecord(params.envVar.kTopicSf, m.key, m.value))
+                this.send(ProducerRecord(params.envVar.kTopicSf, m.key, m.value))
                     }
                     ConsumerStates.IsOk
                 } else {
@@ -92,14 +104,15 @@ internal fun work(params: Params) {
                 }
     }
     log.info { "Start polling sf topic for  new or updated records" }
+
     getSalesforceSObjectPostFun(params.getSalesforceDetails()) { sfPost ->
         getKafkaConsumerByConfig<ByteArray, ByteArray>(
                 mapOf(
                         ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG to params.envVar.kBrokers,
                         ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG to ByteArraySerializer::class.java,
                         ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG to ByteArraySerializer::class.java,
-                        ConsumerConfig.GROUP_ID_CONFIG to params.envVar.kClientID,
-                        ConsumerConfig.CLIENT_ID_CONFIG to params.envVar.kClientID,
+                        ConsumerConfig.GROUP_ID_CONFIG to params.envVar.kClientID + "-consumer",
+                        ConsumerConfig.CLIENT_ID_CONFIG to params.envVar.kClientID + "-consumer",
                         ConsumerConfig.AUTO_OFFSET_RESET_CONFIG to "earliest",
                         ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG to "false"
                 ).let { cMap ->
