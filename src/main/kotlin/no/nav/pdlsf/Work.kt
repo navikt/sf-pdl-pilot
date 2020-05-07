@@ -138,9 +138,6 @@ internal fun work(params: Params) {
                                     region = value.region,
                                     doed = value.doed
                             ).toJson()
-                            if (params.envVar.sfInstanceType != SalesforceInstancetype.PRODUCTION.name) {
-                                log.info { "Person to Salesforce - $person" }
-                            }
                             KafkaMessage(
                                     topic = it.topic(),
                                     key = (key.aktoerId),
@@ -148,7 +145,6 @@ internal fun work(params: Params) {
                             )
                         }
                 ).toJson()
-                // log.info { "body - $body" }
                 if (sfPost(body)) {
                     Metrics.sentLayOff.inc(cRecords.count().toDouble())
                     log.info { "Post of ${cRecords.count()} layoff(s) to Salesforce" }
