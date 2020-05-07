@@ -169,8 +169,7 @@ internal fun work(params: Params) {
                     // reset alarm metric
                     if (ServerState.isOk()) Metrics.failedRequest.clear()
 
-                    // ConsumerStates.IsOk
-                    ConsumerStates.IsOkNoCommit // TODO:: Change prod
+                    ConsumerStates.IsOk
                 } else {
                     log.error { "Couldn't post ${cRecords.count()} layoff(s) to Salesforce - leaving kafka consumer loop" }
                     ConsumerStates.HasIssues
