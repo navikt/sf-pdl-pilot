@@ -41,43 +41,29 @@ internal fun work(params: Params) {
         log.info { "Start building up map of person from PDL compaction log" }
         val km: MutableMap<ByteArray, ByteArray?> = mutableMapOf()
         val pilotFnrList = params.vault.pilotList
-        // log.info { "string - $pilotFnrList" }
-        // log.info { "list - ${pilotFnrList.reader().readLines()}}" }
         if (pilotFnrList.isEmpty()) {
             log.error { "Pilot fnr list is empty - terminate" }
             return@getKafkaProducerByConfig
         }
 
         val results = pilotFnrList.reader().readLines().map { fnr ->
-            if (params.envVar.sfInstanceType == SalesforceInstancetype.SCRATCH.name) {
-                log.info { "Is SCRATCH - getPersonFromGraphQL $fnr" }
-                    // getPersonFromGraphQL(fnr)
-                Pair<ConsumerStates, PersonBase>(ConsumerStates.IsOk, Person(
-                        aktoerId = "aktørId3",
-                        identifikasjonsnummer = "fnr",
-                        fornavn = "fornavn",
-                        mellomnavn = "",
-                        etternavn = "etternavn",
-                        adressebeskyttelse = Gradering.UGRADERT,
-                        sikkerhetstiltak = listOf("sikkerhet", "sikkerhet2"),
-                        kommunenummer = "3001",
-                        region = "01",
-                        doed = false
-                ))
-            } else {
-            Pair<ConsumerStates, PersonBase>(ConsumerStates.IsOk, Person(
-                    aktoerId = "aktørId2",
-                    identifikasjonsnummer = "fnr",
-                    fornavn = "fornavn",
-                    mellomnavn = "",
-                    etternavn = "etternavn",
-                    adressebeskyttelse = Gradering.UGRADERT,
-                    sikkerhetstiltak = listOf("sikkerhet", "sikkerhet2"),
-                    kommunenummer = "3001",
-                    region = "01",
-                    doed = false
-            ))
-            }
+//            if (params.envVar.sfInstanceType == SalesforceInstancetype.SCRATCH.name) {
+//                log.info { "Is SCRATCH - getPersonFromGraphQL $fnr" }
+                    getPersonFromGraphQL(fnr)
+//            } else {
+//            Pair<ConsumerStates, PersonBase>(ConsumerStates.IsOk, Person(
+//                    aktoerId = "aktørId2",
+//                    identifikasjonsnummer = "fnr",
+//                    fornavn = "fornavn",
+//                    mellomnavn = "",
+//                    etternavn = "etternavn",
+//                    adressebeskyttelse = Gradering.UGRADERT,
+//                    sikkerhetstiltak = listOf("sikkerhet", "sikkerhet2"),
+//                    kommunenummer = "3001",
+//                    region = "01",
+//                    doed = false
+//            ))
+//            }
         }
         val areOk = results.fold(true) { acc, resp -> acc && (resp.first == ConsumerStates.IsOk) }
 
@@ -136,7 +122,6 @@ internal fun work(params: Params) {
             log.info { "${cRecords.count()} - new or updated records ready to process to SF" }
 
             if (!cRecords.isEmpty) {
-                // TODO :: SF postering
                 val body = SFsObjectRest(
                         records = cRecords.map {
                             val key = it.key().protobufSafeParseKey()
@@ -153,7 +138,9 @@ internal fun work(params: Params) {
                                     region = value.region,
                                     doed = value.doed
                             ).toJson()
-                            log.info { "Person to Salesforce - $person" }
+                            if(params.envVar.sfInstanceType != SalesforceInstancetype.PRODUCTION.name) {
+                                log.info { "Person to Salesforce - $person" }
+                            }
                             KafkaMessage(
                                     topic = it.topic(),
                                     key = (key.aktoerId),

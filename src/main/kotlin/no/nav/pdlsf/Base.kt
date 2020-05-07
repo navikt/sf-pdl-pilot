@@ -28,7 +28,6 @@ fun ApacheClient.proxy(): HttpHandler = EnvVar().httpsProxy.let { p ->
 
     when {
         p.isEmpty() -> this()
-        // TODO:: må håndtere proxy for salesforce og ikke for STS og GraphQL
         else -> {
             val up = URI(p)
             this(client =
