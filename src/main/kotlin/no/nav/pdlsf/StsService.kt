@@ -26,7 +26,7 @@ private var cachedToken: StsAccessToken? = null // TODO :: Sealed class StsToken
 
 @ImplicitReflectionSerializer
 private fun fetchNewToken(): StsAccessTokenBase = runCatching {
-    Http.client.invokeWM(
+    Http.clientWithoutProxy.invokeWM(
             (Request(Method.GET, EnvVar().stsUrl)
                     .header("x-nav-apiKey", EnvVar().stsApiKey)
                     .header("Authorization", "Basic ${Vault().credentials()}")

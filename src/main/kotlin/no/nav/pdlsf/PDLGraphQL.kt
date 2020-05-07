@@ -28,7 +28,7 @@ private fun executeGraphQlQuery(
     variables: Map<String, String>,
     stsToken: StsAccessToken
 ): QueryResponseBase = runCatching {
-    Http.client.invokeWM(
+    Http.clientWithoutProxy.invokeWM(
             org.http4k.core.Request(Method.POST, EnvVar().pdlGraphQlUrl)
                     .header("x-nav-apiKey", EnvVar().pdlGraphQlApiKey)
                     .header("Tema", "GEN")
