@@ -34,7 +34,6 @@ private fun fetchNewToken(): StsAccessTokenBase = runCatching {
                     .query("grant_type", "client_credentials"))
                     .query("scope", "openid")
     ).let { response ->
-        log.info { "Response fetch - $response" }
         when (response.status) {
             Status.OK -> runCatching { json.parse<StsAccessToken>(response.bodyString()) }
                     .onFailure { log.error { "Error parsing access token from STS - ${it.localizedMessage}" } }

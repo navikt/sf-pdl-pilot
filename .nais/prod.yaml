@@ -6,7 +6,7 @@ metadata:
   labels:
     team: teamcrm
 spec:
-  webproxy: false
+  webproxy: true
   image: {{ image }}
   port: 8080
   replicas:
@@ -55,7 +55,7 @@ spec:
     - name: KAFKA_SASLMEC
       value: PLAIN
     - name: KAFKA_TOPIC_SF
-      value: privat-sf-person-v1
+      value: privat-sf-person-pilot-v1
     - name: PDL_GRAPHQL_URL
       value: 'https://api-gw.oera.no/pdl-api/graphql'
     - name: STS_REST_URL

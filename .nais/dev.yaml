@@ -63,6 +63,6 @@ spec:
     - name: MS_BETWEEN_WORK
       value: '600000'
     - name: SF_INSTTYPE
-      value: 'SCRATCH'
+      value: 'PREPROD'
     - name: SF_VERSION
       value: 'v48.0'
