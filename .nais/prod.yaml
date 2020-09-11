@@ -61,7 +61,7 @@ spec:
     - name: STS_REST_URL
       value: 'https://api-gw.oera.no/security-token-service/rest/v1/sts/token'
     - name: MS_BETWEEN_WORK
-      value: '1800000'
+      value: '3200000'
     - name: SF_INSTTYPE
       value: 'PRODUCTION'
     - name: SF_VERSION

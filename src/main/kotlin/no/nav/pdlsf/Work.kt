@@ -78,7 +78,7 @@ internal fun work(params: Params) {
                     val personProto = personBase.toPersonProto()
                     val status = cache.exists(personBase.aktoerId, personProto.second.hashCode())
                     Metrics.publishedPersons.labels(status.name).inc()
-                    if (status in listOf(ObjectInCacheStatus.New, ObjectInCacheStatus.Updated)) {
+                    if (status in listOf(ObjectInCacheStatus.New, ObjectInCacheStatus.Updated, ObjectInCacheStatus.NoChange)) {
                         km[personProto.first.toByteArray()] = personProto.second.toByteArray()
                     }
                 }
