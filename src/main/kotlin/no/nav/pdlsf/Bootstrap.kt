@@ -9,7 +9,6 @@ import mu.KotlinLogging
 @ImplicitReflectionSerializer
 object Bootstrap {
 
-
     private val log = KotlinLogging.logger { }
 
     fun start(ev: EnvVar = EnvVar()) {
