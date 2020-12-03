@@ -317,13 +317,14 @@ private fun QueryResponse.Data.HentPerson.findNavn(): NavnBase {
     }
 }
 
+var messagenr = 0
 @UnstableDefault
 @ImplicitReflectionSerializer
 fun String.getQueryResponseFromJsonString(): QueryResponseBase = runCatching {
         json.parse(QueryResponse.serializer(), this).also {
             it.data.hentIdenter.identer.firstOrNull { id -> id.ident == "19118549425" }?.let {
-                log.info { "Found subject source store message" }
-                File("/tmp/investigate").writeText("Findings:\n$this")
+                log.info { "Found subject source store message msg nr $messagenr" }
+                File("/tmp/investigate${messagenr++}").writeText("Findings:\n$this")
             }
         }
     }
