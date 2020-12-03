@@ -1,5 +1,6 @@
 package no.nav.pdlsf
 
+import java.io.File
 import kotlinx.serialization.ImplicitReflectionSerializer
 import kotlinx.serialization.UnstableDefault
 import mu.KotlinLogging
@@ -65,6 +66,11 @@ internal fun work(params: Params) {
 //            ))
 //            }
         }
+        results.firstOrNull { it.second is Person && (it.second as Person).identifikasjonsnummer == "19118549425" }?.let {
+            log.info { "Found subject store message" }
+            File("/tmp/investigate").writeText("Findings:\n+${(it.second as Person).toJson()}")
+        }
+
         val areOk = results.fold(true) { acc, resp -> acc && (resp.first == ConsumerStates.IsOk) }
 
         val finalRes = if (areOk) {
