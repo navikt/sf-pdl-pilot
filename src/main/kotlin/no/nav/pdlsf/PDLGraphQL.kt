@@ -1,5 +1,6 @@
 package no.nav.pdlsf
 
+import java.io.File
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -319,7 +320,12 @@ private fun QueryResponse.Data.HentPerson.findNavn(): NavnBase {
 @UnstableDefault
 @ImplicitReflectionSerializer
 fun String.getQueryResponseFromJsonString(): QueryResponseBase = runCatching {
-        json.parse(QueryResponse.serializer(), this)
+        json.parse(QueryResponse.serializer(), this).also {
+            it.data.hentIdenter.identer.firstOrNull { id -> id.ident == "19118549425" }?.let {
+                log.info { "Found subject source store message" }
+                File("/tmp/investigate").writeText("Findings:\n$this")
+            }
+        }
     }
         .onFailure { log.error { "Failed serialize GraphQL QueryResponse - ${it.localizedMessage}" } }
         .getOrElse {
